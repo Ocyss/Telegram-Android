@@ -109,6 +109,12 @@ dependencies {
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'
 }
 
+def chatcraftApiId = providers.environmentVariable('CHATCRAFT_API_ID').getOrElse('')
+def chatcraftApiHash = providers.environmentVariable('CHATCRAFT_API_HASH').getOrElse('')
+if (!(chatcraftApiId ==~ /[1-9][0-9]*/) || chatcraftApiId.toBigInteger() > Integer.MAX_VALUE || !(chatcraftApiHash ==~ /[0-9a-fA-F]{32}/)) {
+    throw new GradleException('Set CHATCRAFT_API_ID (positive int32) and CHATCRAFT_API_HASH (32 hex characters) environment variables.')
+}
+
 android {
     compileSdkVersion 36
     buildToolsVersion '36.0.0'
@@ -135,6 +141,9 @@ android {
     }
 
     defaultConfig {
+        buildConfigField "int", "CHATCRAFT_API_ID", chatcraftApiId
+        buildConfigField "String", "CHATCRAFT_API_HASH", '"' + chatcraftApiHash + '"'
+
         minSdkVersion 23
         targetSdkVersion 36
 
