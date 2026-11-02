@@ -75,6 +75,23 @@ public class ChatcraftSettingsActivity extends BaseFragment {
             for (String id : ChatcraftUiIds.IDS) {
                 option("Show " + id, id, ChatcraftCore.visible(id), needle, true);
             }
+            android.widget.Button reset = new android.widget.Button(context);
+            reset.setText("Restore defaults");
+            controls.addView(reset);
+            reset.setOnClickListener(view -> {
+                try {
+                    JSONObject defaults = ChatcraftCore.settings();
+                    defaults.put("version", 1);
+                    defaults.put("hide_grouped_chats", false);
+                    defaults.put("read_first", false);
+                    defaults.put("hide_sponsored", true);
+                    defaults.put("hidden_ui_ids", new JSONArray());
+                    ChatcraftCore.save(defaults);
+                    refresh(query);
+                } catch (Exception failure) {
+                    Toast.makeText(context, failure.toString(), Toast.LENGTH_LONG).show();
+                }
+            });
         } catch (Exception error) {
             Toast.makeText(context, error.toString(), Toast.LENGTH_LONG).show();
         }

@@ -10999,7 +10999,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         }
         if ((dialogsType == 7 || dialogsType == 8) && initialDialogsType == DIALOGS_TYPE_DEFAULT) {
             MessagesController.DialogFilter filter = AccountInstance.getInstance(currentAccount).getMessagesController().selectedDialogFilter[dialogsType == 8 ? 1 : 0];
-            return filter != null && filter.isDefault() && org.telegram.messenger.ChatcraftCore.hideGroupedChats();
+            return (filter == null || filter.isDefault()) && org.telegram.messenger.ChatcraftCore.hideGroupedChats();
         }
         return false;
     }
@@ -11052,7 +11052,8 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         } else if (dialogsType == 7 || dialogsType == 8) {
             MessagesController.DialogFilter dialogFilter = messagesController.selectedDialogFilter[dialogsType == 7 ? 0 : 1];
             if (dialogFilter == null) {
-                return messagesController.getDialogs(folderId);
+                ArrayList<TLRPC.Dialog> dialogs = messagesController.getDialogs(folderId);
+                return isChatcraftMainListFiltered(currentAccount, dialogsType, folderId) ? org.telegram.messenger.ChatcraftCore.mainDialogs(currentAccount, dialogs) : dialogs;
             } else {
                 if (initialDialogsType == DIALOGS_TYPE_FORWARD) {
                     return dialogFilter.dialogsForward;

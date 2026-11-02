@@ -735,7 +735,11 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
             }
         }
         sessionsRow = org.telegram.messenger.ChatcraftCore.visible("android.privacy.sessions") ? rowCount++ : -1;
-        sessionsDetailRow = rowCount++;
+        sessionsDetailRow = sessionsRow >= 0 ? rowCount++ : -1;
+        if (rowCount == securitySectionRow + 1) {
+            rowCount--;
+            securitySectionRow = -1;
+        }
 
         privacySectionRow = rowCount++;
         phoneNumberRow = org.telegram.messenger.ChatcraftCore.visible("android.privacy.phoneNumber") ? rowCount++ : -1;
@@ -756,12 +760,20 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
         bioRow = org.telegram.messenger.ChatcraftCore.visible("android.privacy.bio") ? rowCount++ : -1;
         musicRow = org.telegram.messenger.ChatcraftCore.visible("android.privacy.music") ? rowCount++ : -1;
         groupsRow = org.telegram.messenger.ChatcraftCore.visible("android.privacy.groups") ? rowCount++ : -1;
-        privacyShadowRow = rowCount++;
+        privacyShadowRow = groupsRow >= 0 ? rowCount++ : -1;
+        if (rowCount == privacySectionRow + 1) {
+            rowCount--;
+            privacySectionRow = -1;
+        }
 
         if (getMessagesController().autoarchiveAvailable || getUserConfig().isPremium()) {
             newChatsHeaderRow = rowCount++;
             newChatsRow = org.telegram.messenger.ChatcraftCore.visible("android.privacy.newChats") ? rowCount++ : -1;
-            newChatsSectionRow = rowCount++;
+            newChatsSectionRow = newChatsRow >= 0 ? rowCount++ : -1;
+            if (newChatsRow < 0) {
+                rowCount--;
+                newChatsHeaderRow = -1;
+            }
         } else {
             newChatsHeaderRow = -1;
             newChatsRow = -1;
@@ -769,7 +781,11 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
         }
         advancedSectionRow = rowCount++;
         deleteAccountRow = org.telegram.messenger.ChatcraftCore.visible("android.privacy.deleteAccount") ? rowCount++ : -1;
-        deleteAccountDetailRow = rowCount++;
+        deleteAccountDetailRow = deleteAccountRow >= 0 ? rowCount++ : -1;
+        if (deleteAccountRow < 0) {
+            rowCount--;
+            advancedSectionRow = -1;
+        }
         botsSectionRow = rowCount++;
         if (getUserConfig().hasSecureData) {
             passportRow = org.telegram.messenger.ChatcraftCore.visible("android.privacy.passport") ? rowCount++ : -1;
@@ -784,22 +800,34 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
         }
         if (webSessionsActivityPreload != null && webSessionsActivityPreload.getSessionsCount() > 0) {
             webSessionsRow = org.telegram.messenger.ChatcraftCore.visible("android.privacy.webSessions") ? rowCount++ : -1;
-            botsDetailRow = rowCount++;
-            botsAndWebsitesShadowRow = -1;
         } else {
             webSessionsRow = -1;
-            botsDetailRow = -1;
+        }
+        botsDetailRow = webSessionsRow >= 0 ? rowCount++ : -1;
+        botsAndWebsitesShadowRow = -1;
+        if (rowCount == botsSectionRow + 1) {
+            rowCount--;
+            botsSectionRow = -1;
+        } else if (botsDetailRow < 0) {
             botsAndWebsitesShadowRow = rowCount++;
         }
         contactsSectionRow = rowCount++;
         contactsDeleteRow = org.telegram.messenger.ChatcraftCore.visible("android.privacy.contactsDelete") ? rowCount++ : -1;
         contactsSyncRow = org.telegram.messenger.ChatcraftCore.visible("android.privacy.contactsSync") ? rowCount++ : -1;
         contactsSuggestRow = org.telegram.messenger.ChatcraftCore.visible("android.privacy.contactsSuggest") ? rowCount++ : -1;
-        contactsDetailRow = rowCount++;
+        contactsDetailRow = contactsSuggestRow >= 0 ? rowCount++ : -1;
+        if (rowCount == contactsSectionRow + 1) {
+            rowCount--;
+            contactsSectionRow = -1;
+        }
         secretSectionRow = rowCount++;
         secretMapRow = org.telegram.messenger.ChatcraftCore.visible("android.privacy.secretMap") ? rowCount++ : -1;
         secretWebpageRow = org.telegram.messenger.ChatcraftCore.visible("android.privacy.secretWebpage") ? rowCount++ : -1;
-        secretDetailRow = rowCount++;
+        secretDetailRow = secretWebpageRow >= 0 ? rowCount++ : -1;
+        if (rowCount == secretSectionRow + 1) {
+            rowCount--;
+            secretSectionRow = -1;
+        }
         if (listAdapter != null && notify) {
             listAdapter.notifyDataSetChanged();
         }

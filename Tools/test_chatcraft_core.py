@@ -49,8 +49,7 @@ def check_sources():
         "secretWebpageRow": "secretWebpage",
     }
     pattern = re.compile(
-        r'org\.telegram\.messenger\.ChatcraftCore\.visible\("(android\.[A-Za-z0-9_.-]+)"\)'
-        r"\s*\?\s*rowCount\+\+\s*:\s*-1"
+        r'(?:org\.telegram\.messenger\.)?ChatcraftCore\s*\.\s*visible\s*\(\s*"(android\.[A-Za-z0-9_.-]+)"\s*\)'
     )
     ids = []
     for source in (java / "ui").rglob("*.java"):
@@ -58,8 +57,62 @@ def check_sources():
         text = re.sub(r"/\*.*?\*/", "", text, flags=re.S)
         text = re.sub(r"//[^\r\n]*", "", text)
         ids.extend(pattern.findall(text))
-    assert len(ids) == len(set(ids)) == len(expected) == 30, ids
-    assert set(ids) == {"android.privacy." + name for name in expected.values()}
+    settings_ids = {
+        "setAvatar",
+        "number",
+        "setUsername",
+        "bio",
+        "graceSuggestion",
+        "phoneSuggestion",
+        "passwordSuggestion",
+        "chat",
+        "privacy",
+        "notifications",
+        "data",
+        "liteMode",
+        "filters",
+        "devices",
+        "language",
+        "premium",
+        "stars",
+        "ton",
+        "business",
+        "premiumGifting",
+        "question",
+        "faq",
+        "policy",
+        "sendLogs",
+        "sendLastLogs",
+        "clearLogs",
+        "switchBackend",
+        "version",
+    }
+    assert len(ids) == len(set(ids)) == 58, ids
+    assert set(ids) == {"android.privacy." + name for name in expected.values()} | {
+        "android.settings." + name for name in settings_ids
+    }
+    profile = (java / "ui/ProfileActivity.java").read_text(encoding="utf-8")
+    assert "chatcraftRow = rowCount++;" in profile
+    assert 'new SearchResult(9001, "Chatcraft"' in profile
+    assert "presentFragment(new ChatcraftSettingsActivity())" in profile
+    settings = (java / "ui/ChatcraftSettingsActivity.java").read_text(encoding="utf-8")
+    assert 'defaults.put("hidden_ui_ids", new JSONArray());' in settings
+    assert settings.index("ChatcraftCore.save(defaults);") < settings.index(
+        "refresh(query);"
+    )
+    video = (java / "messenger/video/VideoAds.java").read_text(encoding="utf-8")
+    for method, next_method in (
+        ("private void init(", "private int requestId"),
+        ("private void load()", "private void schedule()"),
+        ("private void schedule()", "private long waitingTimeSince"),
+        ("private void show()", "final TLRPC.TL_sponsoredMessage ad"),
+    ):
+        section = video[video.index(method) : video.index(next_method)]
+        assert "ChatcraftCore.hideSponsored()" in section
+    assert (
+        "if (!loading) return;\n            if (org.telegram.messenger.ChatcraftCore.hideSponsored())"
+        in video
+    )
     privacy = (java / "ui/PrivacySettingsActivity.java").read_text(encoding="utf-8")
     for row, name in expected.items():
         assert (
@@ -79,7 +132,7 @@ def check_sources():
     assert "return !" + guard + " && super.isLongPressDragEnabled();" in dialogs
     assert "if (folderId != 0 || onlySelect) return false;" in dialogs
     assert (
-        "filter != null && filter.isDefault() && org.telegram.messenger.ChatcraftCore.hideGroupedChats()"
+        "(filter == null || filter.isDefault()) && org.telegram.messenger.ChatcraftCore.hideGroupedChats()"
         in dialogs
     )
     adapter = (java / "ui/Adapters/DialogsAdapter.java").read_text(encoding="utf-8")
@@ -92,7 +145,7 @@ def check_sources():
     assert "dialogId = encryptedChat.user_id;" in core
     assert "filter.includesDialog(instance, dialogId, dialog)" in core
     print(
-        "Source contracts passed: 30 privacy leaf gates, drag entry/adapter guards, encrypted membership ID"
+        "Source contracts passed: 58 UI gates, settings entry/reset, video ad guards, drag guards, encrypted membership ID"
     )
 
 

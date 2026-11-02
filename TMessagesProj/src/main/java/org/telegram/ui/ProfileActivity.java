@@ -629,6 +629,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     private int notificationRow;
     private int languageRow;
     private int privacyRow;
+    private int chatcraftRow;
     private int dataRow;
     private int chatRow;
     private int filtersRow;
@@ -4536,6 +4537,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 presentFragment(fragment);
             } else if (position == notificationRow) {
                 presentFragment(new NotificationsSettingsActivity());
+            } else if (position == chatcraftRow) {
+                presentFragment(new ChatcraftSettingsActivity());
             } else if (position == privacyRow) {
                 presentFragment(new PrivacySettingsActivity().setCurrentPassword(currentPassword));
             } else if (position == dataRow) {
@@ -9554,6 +9557,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     @Override
     public void onResume() {
         super.onResume();
+        if (isSettings() && userId == getUserConfig().getClientUserId()) {
+            updateRowsIds();
+        }
         if (sharedMediaLayout != null) {
             sharedMediaLayout.onResume();
         }
@@ -10480,6 +10486,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         premiumGiftingRow = -1;
         premiumSectionsRow = -1;
         privacyRow = -1;
+        chatcraftRow = -1;
         dataRow = -1;
         chatRow = -1;
         filtersRow = -1;
@@ -10619,77 +10626,95 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
             if (UserObject.isUserSelf(user) && !myProfile) {
                 if (avatarBig == null && (user.photo == null || !(user.photo.photo_big instanceof TLRPC.TL_fileLocation_layer97) && !(user.photo.photo_big instanceof TLRPC.TL_fileLocationToBeDeprecated)) && (avatarsViewPager == null || avatarsViewPager.getRealCount() == 0)) {
-                    setAvatarRow = rowCount++;
-                    setAvatarSectionRow = rowCount++;
+                    setAvatarRow = org.telegram.messenger.ChatcraftCore.visible("android.settings.setAvatar") ? rowCount++ : -1;
+                    setAvatarSectionRow = setAvatarRow >= 0 ? rowCount++ : -1;
                 }
                 numberSectionRow = rowCount++;
-                numberRow = rowCount++;
-                setUsernameRow = rowCount++;
-                bioRow = rowCount++;
-
-                settingsSectionRow = rowCount++;
+                numberRow = org.telegram.messenger.ChatcraftCore.visible("android.settings.number") ? rowCount++ : -1;
+                setUsernameRow = org.telegram.messenger.ChatcraftCore.visible("android.settings.setUsername") ? rowCount++ : -1;
+                bioRow = org.telegram.messenger.ChatcraftCore.visible("android.settings.bio") ? rowCount++ : -1;
+                settingsSectionRow = -1;
+                if (rowCount == numberSectionRow + 1) {
+                    rowCount--;
+                    numberSectionRow = -1;
+                } else {
+                    settingsSectionRow = rowCount++;
+                }
 
                 Set<String> suggestions = getMessagesController().pendingSuggestions;
                 if (suggestions.contains("PREMIUM_GRACE")) {
-                    graceSuggestionRow = rowCount++;
-                    graceSuggestionSectionRow = rowCount++;
+                    graceSuggestionRow = org.telegram.messenger.ChatcraftCore.visible("android.settings.graceSuggestion") ? rowCount++ : -1;
+                    graceSuggestionSectionRow = graceSuggestionRow >= 0 ? rowCount++ : -1;
                 } else if (suggestions.contains("VALIDATE_PHONE_NUMBER")) {
-                    phoneSuggestionRow = rowCount++;
-                    phoneSuggestionSectionRow = rowCount++;
+                    phoneSuggestionRow = org.telegram.messenger.ChatcraftCore.visible("android.settings.phoneSuggestion") ? rowCount++ : -1;
+                    phoneSuggestionSectionRow = phoneSuggestionRow >= 0 ? rowCount++ : -1;
                 } else if (suggestions.contains("VALIDATE_PASSWORD")) {
-                    passwordSuggestionRow = rowCount++;
-                    passwordSuggestionSectionRow = rowCount++;
+                    passwordSuggestionRow = org.telegram.messenger.ChatcraftCore.visible("android.settings.passwordSuggestion") ? rowCount++ : -1;
+                    passwordSuggestionSectionRow = passwordSuggestionRow >= 0 ? rowCount++ : -1;
                 }
 
                 settingsSectionRow2 = rowCount++;
-                chatRow = rowCount++;
-                privacyRow = rowCount++;
-                notificationRow = rowCount++;
-                dataRow = rowCount++;
-                liteModeRow = rowCount++;
+                chatRow = org.telegram.messenger.ChatcraftCore.visible("android.settings.chat") ? rowCount++ : -1;
+                privacyRow = org.telegram.messenger.ChatcraftCore.visible("android.settings.privacy") ? rowCount++ : -1;
+                chatcraftRow = rowCount++;
+                notificationRow = org.telegram.messenger.ChatcraftCore.visible("android.settings.notifications") ? rowCount++ : -1;
+                dataRow = org.telegram.messenger.ChatcraftCore.visible("android.settings.data") ? rowCount++ : -1;
+                liteModeRow = org.telegram.messenger.ChatcraftCore.visible("android.settings.liteMode") ? rowCount++ : -1;
 //                stickersRow = rowCount++;
                 if (getMessagesController().filtersEnabled || !getMessagesController().dialogFilters.isEmpty()) {
-                    filtersRow = rowCount++;
+                    filtersRow = org.telegram.messenger.ChatcraftCore.visible("android.settings.filters") ? rowCount++ : -1;
                 }
-                devicesRow = rowCount++;
-                languageRow = rowCount++;
+                devicesRow = org.telegram.messenger.ChatcraftCore.visible("android.settings.devices") ? rowCount++ : -1;
+                languageRow = org.telegram.messenger.ChatcraftCore.visible("android.settings.language") ? rowCount++ : -1;
                 devicesSectionRow = rowCount++;
                 if (!getMessagesController().premiumFeaturesBlocked()) {
-                    premiumRow = rowCount++;
+                    premiumRow = org.telegram.messenger.ChatcraftCore.visible("android.settings.premium") ? rowCount++ : -1;
                 }
                 if (getMessagesController().starsPurchaseAvailable()) {
-                    starsRow = rowCount++;
+                    starsRow = org.telegram.messenger.ChatcraftCore.visible("android.settings.stars") ? rowCount++ : -1;
                 }
                 StarsController.getInstance(currentAccount, true).getBalance();
                 if (ApplicationLoader.isBetaBuild() || ApplicationLoader.isStandaloneBuild() || ApplicationLoader.isHuaweiStoreBuild() || (StarsController.getInstance(currentAccount, true).balanceAvailable() && (StarsController.getInstance(currentAccount, true).hasTransactions() || StarsController.getInstance(currentAccount, true).getBalance().positive()))) {
-                    tonRow = rowCount++;
+                    tonRow = org.telegram.messenger.ChatcraftCore.visible("android.settings.ton") ? rowCount++ : -1;
                 }
                 if (!getMessagesController().premiumFeaturesBlocked()) {
-                    businessRow = rowCount++;
+                    businessRow = org.telegram.messenger.ChatcraftCore.visible("android.settings.business") ? rowCount++ : -1;
                 }
                 if (!getMessagesController().premiumPurchaseBlocked()) {
-                    premiumGiftingRow = rowCount++;
+                    premiumGiftingRow = org.telegram.messenger.ChatcraftCore.visible("android.settings.premiumGifting") ? rowCount++ : -1;
                 }
                 if (premiumRow >= 0 || starsRow >= 0 || tonRow >= 0 || businessRow >= 0 || premiumGiftingRow >= 0) {
                     premiumSectionsRow = rowCount++;
                 }
                 helpHeaderRow = rowCount++;
-                questionRow = rowCount++;
-                faqRow = rowCount++;
-                policyRow = rowCount++;
+                questionRow = org.telegram.messenger.ChatcraftCore.visible("android.settings.question") ? rowCount++ : -1;
+                faqRow = org.telegram.messenger.ChatcraftCore.visible("android.settings.faq") ? rowCount++ : -1;
+                policyRow = org.telegram.messenger.ChatcraftCore.visible("android.settings.policy") ? rowCount++ : -1;
+                if (rowCount == helpHeaderRow + 1) {
+                    rowCount--;
+                    helpHeaderRow = -1;
+                }
                 if (BuildVars.LOGS_ENABLED || BuildVars.DEBUG_PRIVATE_VERSION) {
-                    helpSectionCell = rowCount++;
+                    helpSectionCell = helpHeaderRow >= 0 ? rowCount++ : -1;
                     debugHeaderRow = rowCount++;
                 }
                 if (BuildVars.LOGS_ENABLED) {
-                    sendLogsRow = rowCount++;
-                    sendLastLogsRow = rowCount++;
-                    clearLogsRow = rowCount++;
+                    sendLogsRow = org.telegram.messenger.ChatcraftCore.visible("android.settings.sendLogs") ? rowCount++ : -1;
+                    sendLastLogsRow = org.telegram.messenger.ChatcraftCore.visible("android.settings.sendLastLogs") ? rowCount++ : -1;
+                    clearLogsRow = org.telegram.messenger.ChatcraftCore.visible("android.settings.clearLogs") ? rowCount++ : -1;
                 }
                 if (BuildVars.DEBUG_VERSION) {
-                    switchBackendRow = rowCount++;
+                    switchBackendRow = org.telegram.messenger.ChatcraftCore.visible("android.settings.switchBackend") ? rowCount++ : -1;
                 }
-                versionRow = rowCount++;
+                if (debugHeaderRow >= 0 && rowCount == debugHeaderRow + 1) {
+                    rowCount--;
+                    debugHeaderRow = -1;
+                    if (helpSectionCell >= 0) {
+                        rowCount--;
+                        helpSectionCell = -1;
+                    }
+                }
+                versionRow = org.telegram.messenger.ChatcraftCore.visible("android.settings.version") ? rowCount++ : -1;
             } else {
                 String username = UserObject.getPublicUsername(user);
                 boolean hasInfo = userInfo != null && !TextUtils.isEmpty(userInfo.about) || user != null && !TextUtils.isEmpty(username);
@@ -13842,6 +13867,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         textCell.setImageLeft(23);
                     } else if (position == notificationRow) {
                         textCell.setTextAndIcon(LocaleController.getString(R.string.NotificationsAndSounds), R.drawable.msg2_notifications, true);
+                    } else if (position == chatcraftRow) {
+                        textCell.setTextAndIcon("Chatcraft", R.drawable.msg_customize, true);
                     } else if (position == privacyRow) {
                         textCell.setTextAndIcon(LocaleController.getString(R.string.PrivacySettings), R.drawable.msg2_secret, true);
                     } else if (position == dataRow) {
@@ -14283,9 +14310,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
         @Override
         public boolean isEnabled(RecyclerView.ViewHolder holder) {
-            if (notificationRow != -1) {
+            if (chatcraftRow != -1) {
                 int position = holder.getAdapterPosition();
-                return position == notificationRow || position == numberRow || position == privacyRow ||
+                return position == notificationRow || position == numberRow || position == privacyRow || position == chatcraftRow ||
                         position == languageRow || position == setUsernameRow || position == bioRow ||
                         position == versionRow || position == dataRow || position == chatRow ||
                         position == questionRow || position == devicesRow || position == filtersRow || position == stickersRow ||
@@ -14332,7 +14359,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             } else if (position == settingsTimerRow || position == settingsKeyRow || position == reportRow || position == reportReactionRow || position == deleteReactionRow ||
                     position == subscribersRow || position == subscribersRequestsRow || position == administratorsRow || position == settingsRow || position == blockedUsersRow ||
                     position == addMemberRow || position == joinRow || position == unblockRow ||
-                    position == sendMessageRow || position == notificationRow || position == privacyRow ||
+                    position == sendMessageRow || position == notificationRow || position == privacyRow || position == chatcraftRow ||
                     position == languageRow || position == dataRow || position == chatRow ||
                     position == questionRow || position == devicesRow || position == filtersRow || position == stickersRow ||
                     position == faqRow || position == policyRow || position == sendLogsRow || position == sendLastLogsRow ||
@@ -14584,6 +14611,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     new SearchResult(12, getString(R.string.NotificationsServiceConnection), "notificationsServiceConnectionRow", getString(R.string.NotificationsAndSounds), R.drawable.msg_notifications, () -> f.presentFragment(new NotificationsSettingsActivity())),
                     new SearchResult(13, getString(R.string.RepeatNotifications), "repeatRow", getString(R.string.NotificationsAndSounds), R.drawable.msg_notifications, () -> f.presentFragment(new NotificationsSettingsActivity())),
 
+                    new SearchResult(9001, "Chatcraft", R.drawable.msg_customize, () -> f.presentFragment(new ChatcraftSettingsActivity())),
                     new SearchResult(100, getString(R.string.PrivacySettings), R.drawable.msg_secret, () -> f.presentFragment(new PrivacySettingsActivity())).withLink("tg://settings/privacy"),
                     new SearchResult(109, getString(R.string.TwoStepVerification), getString(R.string.PrivacySettings), R.drawable.msg2_secret, () -> f.presentFragment(new TwoStepVerificationActivity())).withLink("tg://settings/privacy/2sv"),
                     new SearchResult(124, getString(R.string.AutoDeleteMessages), getString(R.string.PrivacySettings), R.drawable.msg2_secret, () -> {

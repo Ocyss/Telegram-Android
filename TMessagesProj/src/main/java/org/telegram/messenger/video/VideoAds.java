@@ -179,6 +179,7 @@ public static VideoAds make(
         this.bulletinFactory = bulletinFactory;
         this.lastTime = System.currentTimeMillis();
         this.first = true;
+        if (org.telegram.messenger.ChatcraftCore.hideSponsored()) return;
         if (cache.loaded) {
             start_delay = cache.startDelay;
             between_delay = cache.betweenDelay;
@@ -193,7 +194,7 @@ public static VideoAds make(
     private int requestId;
     private boolean loading, loaded;
     private void load() {
-        if (loading || loaded) return;
+        if (loading || loaded || org.telegram.messenger.ChatcraftCore.hideSponsored()) return;
 
         if (UserConfig.getInstance(currentAccount).isPremium() && MessagesController.getInstance(currentAccount).isSponsoredDisabled()) {
             return;
@@ -207,6 +208,10 @@ public static VideoAds make(
         req.msg_id = msg_id;
         requestId = ConnectionsManager.getInstance(currentAccount).sendRequest(req, (res, err) -> AndroidUtilities.runOnUIThread(() -> {
             if (!loading) return;
+            if (org.telegram.messenger.ChatcraftCore.hideSponsored()) {
+                loading = false;
+                return;
+            }
 
             if (res instanceof TLRPC.TL_messages_sponsoredMessages) {
                 final TLRPC.TL_messages_sponsoredMessages r = (TLRPC.TL_messages_sponsoredMessages) res;
@@ -233,7 +238,7 @@ public static VideoAds make(
 
     private void schedule() {
         AndroidUtilities.cancelRunOnUIThread(showRunnable);
-        if (!loaded || ads.isEmpty()) return;
+        if (!loaded || ads.isEmpty() || org.telegram.messenger.ChatcraftCore.hideSponsored()) return;
         final int delay = first ? start_delay : between_delay;
         final long timePassed = System.currentTimeMillis() - lastTime;
         AndroidUtilities.runOnUIThread(showRunnable, Math.max(0, delay * 1000L - timePassed));
@@ -264,7 +269,7 @@ public static VideoAds make(
     private float currentMenuTranslationY;
 
     private void show() {
-        if (ads.isEmpty()) return;
+        if (ads.isEmpty() || org.telegram.messenger.ChatcraftCore.hideSponsored()) return;
         final TLRPC.TL_sponsoredMessage ad = ads.get(0);
         final long showTime = System.currentTimeMillis() - currentBulletinPassedTime;
         bulletinShowTime = showTime;
