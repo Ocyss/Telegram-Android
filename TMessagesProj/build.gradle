@@ -277,3 +277,5 @@ task checkVisibility {
 }
 
 preBuild.dependsOn checkVisibility
+
+apply from: 'chatcraft.gradle'

@@ -285,6 +285,8 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
             public void onItemClick(int id) {
                 if (id == -1) {
                     finishFragment();
+                } else if (id == 100) {
+                    presentFragment(new ChatcraftSettingsActivity());
                 }
             }
         });
@@ -292,6 +294,7 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
             actionBar.setBackButtonImage(R.drawable.ic_ab_close);
         }
 
+        actionBar.createMenu().addItem(100, "Chatcraft");
         listAdapter = new ListAdapter(context);
 
         fragmentView = new FrameLayout(context);
@@ -682,11 +685,13 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
                 listAdapter.notifyDataSetChanged();
             }
         } else if (id == NotificationCenter.blockedUsersDidLoad) {
-            listAdapter.notifyItemChanged(blockedRow);
+            if (listAdapter != null && blockedRow >= 0) {
+                listAdapter.notifyItemChanged(blockedRow);
+            }
         } else if (id == NotificationCenter.didSetOrRemoveTwoStepPassword) {
             if (args.length > 0) {
                 currentPassword = (TL_account.Password) args[0];
-                if (listAdapter != null) {
+                if (listAdapter != null && passwordRow >= 0) {
                     listAdapter.notifyItemChanged(passwordRow);
                 }
             } else {
@@ -695,7 +700,7 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
                 updateRows();
             }
         } if (id == NotificationCenter.didUpdateGlobalAutoDeleteTimer) {
-            if (listAdapter != null) {
+            if (listAdapter != null && autoDeleteMesages >= 0) {
                 listAdapter.notifyItemChanged(autoDeleteMesages);
             }
         }
@@ -710,18 +715,18 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
         rowCount = 0;
 
         securitySectionRow = rowCount++;
-        passwordRow = rowCount++;
-        autoDeleteMesages = rowCount++;
-        passcodeRow = rowCount++;
+        passwordRow = org.telegram.messenger.ChatcraftCore.visible("android.privacy.password") ? rowCount++ : -1;
+        autoDeleteMesages = org.telegram.messenger.ChatcraftCore.visible("android.privacy.autoDeleteMessages") ? rowCount++ : -1;
+        passcodeRow = org.telegram.messenger.ChatcraftCore.visible("android.privacy.passcode") ? rowCount++ : -1;
         if (getMessagesController().config.settingsDisplayPasskeys.get() && Build.VERSION.SDK_INT >= 28 && BuildVars.SUPPORTS_PASSKEYS) {
-            passkeysRow = rowCount++;
+            passkeysRow = org.telegram.messenger.ChatcraftCore.visible("android.privacy.passkeys") ? rowCount++ : -1;
         }
         if (currentPassword != null ? currentPassword.login_email_pattern != null : SharedConfig.hasEmailLogin) {
-            emailLoginRow = rowCount++;
+            emailLoginRow = org.telegram.messenger.ChatcraftCore.visible("android.privacy.emailLogin") ? rowCount++ : -1;
         } else {
             emailLoginRow = -1;
         }
-        blockedRow = rowCount++;
+        blockedRow = org.telegram.messenger.ChatcraftCore.visible("android.privacy.blocked") ? rowCount++ : -1;
         if (currentPassword != null) {
             boolean hasEmail = currentPassword.login_email_pattern != null;
             if (SharedConfig.hasEmailLogin != hasEmail) {
@@ -729,33 +734,33 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
                 SharedConfig.saveConfig();
             }
         }
-        sessionsRow = rowCount++;
+        sessionsRow = org.telegram.messenger.ChatcraftCore.visible("android.privacy.sessions") ? rowCount++ : -1;
         sessionsDetailRow = rowCount++;
 
         privacySectionRow = rowCount++;
-        phoneNumberRow = rowCount++;
-        lastSeenRow = rowCount++;
-        profilePhotoRow = rowCount++;
-        forwardsRow = rowCount++;
-        callsRow = rowCount++;
+        phoneNumberRow = org.telegram.messenger.ChatcraftCore.visible("android.privacy.phoneNumber") ? rowCount++ : -1;
+        lastSeenRow = org.telegram.messenger.ChatcraftCore.visible("android.privacy.lastSeen") ? rowCount++ : -1;
+        profilePhotoRow = org.telegram.messenger.ChatcraftCore.visible("android.privacy.profilePhoto") ? rowCount++ : -1;
+        forwardsRow = org.telegram.messenger.ChatcraftCore.visible("android.privacy.forwards") ? rowCount++ : -1;
+        callsRow = org.telegram.messenger.ChatcraftCore.visible("android.privacy.calls") ? rowCount++ : -1;
         groupsDetailRow = -1;
         if (!getMessagesController().premiumFeaturesBlocked() || getUserConfig().isPremium()) {
-            voicesRow = rowCount++;
-            noncontactsRow = rowCount++;
+            voicesRow = org.telegram.messenger.ChatcraftCore.visible("android.privacy.voices") ? rowCount++ : -1;
+            noncontactsRow = org.telegram.messenger.ChatcraftCore.visible("android.privacy.noncontacts") ? rowCount++ : -1;
         } else {
             voicesRow = -1;
             noncontactsRow = -1;
         }
-        birthdayRow = rowCount++;
-        giftsRow = rowCount++;
-        bioRow = rowCount++;
-        musicRow = rowCount++;
-        groupsRow = rowCount++;
+        birthdayRow = org.telegram.messenger.ChatcraftCore.visible("android.privacy.birthday") ? rowCount++ : -1;
+        giftsRow = org.telegram.messenger.ChatcraftCore.visible("android.privacy.gifts") ? rowCount++ : -1;
+        bioRow = org.telegram.messenger.ChatcraftCore.visible("android.privacy.bio") ? rowCount++ : -1;
+        musicRow = org.telegram.messenger.ChatcraftCore.visible("android.privacy.music") ? rowCount++ : -1;
+        groupsRow = org.telegram.messenger.ChatcraftCore.visible("android.privacy.groups") ? rowCount++ : -1;
         privacyShadowRow = rowCount++;
 
         if (getMessagesController().autoarchiveAvailable || getUserConfig().isPremium()) {
             newChatsHeaderRow = rowCount++;
-            newChatsRow = rowCount++;
+            newChatsRow = org.telegram.messenger.ChatcraftCore.visible("android.privacy.newChats") ? rowCount++ : -1;
             newChatsSectionRow = rowCount++;
         } else {
             newChatsHeaderRow = -1;
@@ -763,22 +768,22 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
             newChatsSectionRow = -1;
         }
         advancedSectionRow = rowCount++;
-        deleteAccountRow = rowCount++;
+        deleteAccountRow = org.telegram.messenger.ChatcraftCore.visible("android.privacy.deleteAccount") ? rowCount++ : -1;
         deleteAccountDetailRow = rowCount++;
         botsSectionRow = rowCount++;
         if (getUserConfig().hasSecureData) {
-            passportRow = rowCount++;
+            passportRow = org.telegram.messenger.ChatcraftCore.visible("android.privacy.passport") ? rowCount++ : -1;
         } else {
             passportRow = -1;
         }
-        paymentsClearRow = rowCount++;
+        paymentsClearRow = org.telegram.messenger.ChatcraftCore.visible("android.privacy.paymentsClear") ? rowCount++ : -1;
         if (!biometryBots.isEmpty()) {
-            botsBiometryRow = rowCount++;
+            botsBiometryRow = org.telegram.messenger.ChatcraftCore.visible("android.privacy.botsBiometry") ? rowCount++ : -1;
         } else {
             botsBiometryRow = -1;
         }
         if (webSessionsActivityPreload != null && webSessionsActivityPreload.getSessionsCount() > 0) {
-            webSessionsRow = rowCount++;
+            webSessionsRow = org.telegram.messenger.ChatcraftCore.visible("android.privacy.webSessions") ? rowCount++ : -1;
             botsDetailRow = rowCount++;
             botsAndWebsitesShadowRow = -1;
         } else {
@@ -787,13 +792,13 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
             botsAndWebsitesShadowRow = rowCount++;
         }
         contactsSectionRow = rowCount++;
-        contactsDeleteRow = rowCount++;
-        contactsSyncRow = rowCount++;
-        contactsSuggestRow = rowCount++;
+        contactsDeleteRow = org.telegram.messenger.ChatcraftCore.visible("android.privacy.contactsDelete") ? rowCount++ : -1;
+        contactsSyncRow = org.telegram.messenger.ChatcraftCore.visible("android.privacy.contactsSync") ? rowCount++ : -1;
+        contactsSuggestRow = org.telegram.messenger.ChatcraftCore.visible("android.privacy.contactsSuggest") ? rowCount++ : -1;
         contactsDetailRow = rowCount++;
         secretSectionRow = rowCount++;
-        secretMapRow = rowCount++;
-        secretWebpageRow = rowCount++;
+        secretMapRow = org.telegram.messenger.ChatcraftCore.visible("android.privacy.secretMap") ? rowCount++ : -1;
+        secretWebpageRow = org.telegram.messenger.ChatcraftCore.visible("android.privacy.secretWebpage") ? rowCount++ : -1;
         secretDetailRow = rowCount++;
         if (listAdapter != null && notify) {
             listAdapter.notifyDataSetChanged();
@@ -824,16 +829,16 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
                     updateRows(false);
 
                     if (listAdapter != null) {
-                        if (appear) {
+                        if (appear && emailLoginRow >= 0) {
                             listAdapter.notifyItemInserted(emailLoginRow);
-                        } else {
+                        } else if (disappear) {
                             listAdapter.notifyItemRemoved(wasEmailRow);
                         }
                     }
                 }
             }
 
-            if (listAdapter != null) {
+            if (listAdapter != null && passwordRow >= 0) {
                 listAdapter.notifyItemChanged(passwordRow);
             }
         }
@@ -1004,6 +1009,7 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
     @Override
     public void onResume() {
         super.onResume();
+        updateRows(false);
         if (listAdapter != null) {
             listAdapter.notifyDataSetChanged();
         }

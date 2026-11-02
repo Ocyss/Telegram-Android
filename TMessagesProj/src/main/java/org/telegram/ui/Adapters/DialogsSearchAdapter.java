@@ -1124,20 +1124,25 @@ public class DialogsSearchAdapter extends RecyclerListView.SelectionAdapter {
             query = null;
         }
         filterRecent(query);
-        if (!TextUtils.equals(sponsoredQuery, query)) {
+        if (org.telegram.messenger.ChatcraftCore.hideSponsored() || !TextUtils.equals(sponsoredQuery, query)) {
             sponsoredQuery = query;
             sponsoredPeers.clear();
             if (sponsoredReqId != 0) {
                 ConnectionsManager.getInstance(currentAccount).cancelRequest(sponsoredReqId, true);
                 sponsoredReqId = 0;
             }
-            if (query == null || query.length() < 4 || UserConfig.getInstance(currentAccount).isPremium() && MessagesController.getInstance(currentAccount).isSponsoredDisabled()) {
+            if (org.telegram.messenger.ChatcraftCore.hideSponsored() || query == null || query.length() < 4 || UserConfig.getInstance(currentAccount).isPremium() && MessagesController.getInstance(currentAccount).isSponsoredDisabled()) {
                 sponsoredQuery = null;
             } else {
                 final TLRPC.TL_contacts_getSponsoredPeers req = new TLRPC.TL_contacts_getSponsoredPeers();
                 req.q = sponsoredQuery = query;
                 sponsoredReqId = ConnectionsManager.getInstance(currentAccount).sendRequest(req, (res, err) -> AndroidUtilities.runOnUIThread(() -> {
                     sponsoredReqId = 0;
+                    if (org.telegram.messenger.ChatcraftCore.hideSponsored()) {
+                        sponsoredPeers.clear();
+                        notifyDataSetChanged();
+                        return;
+                    }
                     if (res instanceof TLRPC.TL_contacts_sponsoredPeersEmpty) {
                         if (!sponsoredPeers.isEmpty()) {
                             sponsoredPeers.clear();

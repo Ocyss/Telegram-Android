@@ -2429,7 +2429,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 long dialogId = dialogCell.getDialogId();
                 if (actionBar.isActionModeShowed(null)) {
                     TLRPC.Dialog dialog = getMessagesController().dialogs_dict.get(dialogId);
-                    if (!allowMoving || dialog == null || !isDialogPinned(dialog) || DialogObject.isFolderDialogId(dialogId)) {
+                    if (isChatcraftMainListFiltered(currentAccount, parentPage.dialogsType, folderId) || !allowMoving || dialog == null || !isDialogPinned(dialog) || DialogObject.isFolderDialogId(dialogId)) {
                         return 0;
                     }
                     movingView = (DialogCell) viewHolder.itemView;
@@ -2468,8 +2468,13 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         }
 
         @Override
+        public boolean isLongPressDragEnabled() {
+            return !isChatcraftMainListFiltered(currentAccount, parentPage.dialogsType, folderId) && super.isLongPressDragEnabled();
+        }
+
+        @Override
         public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder source, RecyclerView.ViewHolder target) {
-            if (!(target.itemView instanceof DialogCell)) {
+            if (isChatcraftMainListFiltered(currentAccount, parentPage.dialogsType, folderId) || !(target.itemView instanceof DialogCell)) {
                 return false;
             }
             DialogCell dialogCell = (DialogCell) target.itemView;
@@ -10986,6 +10991,19 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
     private ArrayList<TLRPC.Dialog> botShareDialogs;
 
+    // Filtered lists share Dialog objects but not their order; never reorder pins through the copy.
+    public boolean isChatcraftMainListFiltered(int currentAccount, int dialogsType, int folderId) {
+        if (folderId != 0 || onlySelect) return false;
+        if (dialogsType == DIALOGS_TYPE_DEFAULT) {
+            return org.telegram.messenger.ChatcraftCore.hideGroupedChats();
+        }
+        if ((dialogsType == 7 || dialogsType == 8) && initialDialogsType == DIALOGS_TYPE_DEFAULT) {
+            MessagesController.DialogFilter filter = AccountInstance.getInstance(currentAccount).getMessagesController().selectedDialogFilter[dialogsType == 8 ? 1 : 0];
+            return filter != null && filter.isDefault() && org.telegram.messenger.ChatcraftCore.hideGroupedChats();
+        }
+        return false;
+    }
+
     @NonNull
     public ArrayList<TLRPC.Dialog> getDialogsArray(int currentAccount, int dialogsType, int folderId, boolean frozen) {
         if (frozen && frozenDialogsList != null) {
@@ -10993,7 +11011,8 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         }
         MessagesController messagesController = AccountInstance.getInstance(currentAccount).getMessagesController();
         if (dialogsType == DIALOGS_TYPE_DEFAULT) {
-            return messagesController.getDialogs(folderId);
+            ArrayList<TLRPC.Dialog> dialogs = messagesController.getDialogs(folderId);
+            return isChatcraftMainListFiltered(currentAccount, dialogsType, folderId) ? org.telegram.messenger.ChatcraftCore.mainDialogs(currentAccount, dialogs) : dialogs;
         } else if (dialogsType == DIALOGS_TYPE_WIDGET || dialogsType == DIALOGS_TYPE_IMPORT_HISTORY) {
             return messagesController.dialogsServerOnly;
         } else if (dialogsType == DIALOGS_TYPE_ADD_USERS_TO) {
@@ -11038,7 +11057,8 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 if (initialDialogsType == DIALOGS_TYPE_FORWARD) {
                     return dialogFilter.dialogsForward;
                 }
-                return dialogFilter.dialogs;
+                return isChatcraftMainListFiltered(currentAccount, dialogsType, folderId)
+                        ? org.telegram.messenger.ChatcraftCore.mainDialogs(currentAccount, dialogFilter.dialogs) : dialogFilter.dialogs;
             }
         } else if (dialogsType == DIALOGS_TYPE_BLOCK) {
             return messagesController.dialogsForBlock;

@@ -1,0 +1,28 @@
+// Scan actual native row-construction gates, not Android resource names.
+def chatcraftSources = fileTree('src/main/java/org/telegram/ui') {
+    include '**/*.java'
+    exclude 'ChatcraftSettingsActivity.java'
+}
+def chatcraftGenerated = layout.buildDirectory.dir('generated/source/chatcraft')
+def generateChatcraftUiIds = tasks.register('generateChatcraftUiIds') {
+    inputs.files(chatcraftSources)
+    outputs.dir(chatcraftGenerated)
+    doLast {
+        def ids = new TreeSet<String>()
+        chatcraftSources.each { source ->
+            // Strip comments so documentation cannot create fictitious controls.
+            def text = source.getText('UTF-8').replaceAll(/(?s)\/\*.*?\*\//, '').replaceAll(/(?m)\/\/[^\r\n]*/, '')
+            def matches = text =~ /org\.telegram\.messenger\.ChatcraftCore\.visible\("(android\.[A-Za-z0-9_.-]+)"\)\s*\?\s*rowCount\+\+\s*:\s*-1/
+            matches.each { match ->
+                if (!ids.add(match[1])) throw new GradleException("Duplicate Chatcraft UI gate: ${match[1]}")
+            }
+        }
+        if (ids.isEmpty()) throw new GradleException('No integrated Chatcraft native UI gates found')
+        def output = new File(chatcraftGenerated.get().asFile, 'org/telegram/messenger/ChatcraftUiIds.java')
+        output.parentFile.mkdirs()
+        output.setText('package org.telegram.messenger;\n\npublic final class ChatcraftUiIds {\n    public static final String[] IDS = {\n' +
+                ids.collect { '        "' + it + '",' }.join('\n') + '\n    };\n}\n', 'UTF-8')
+    }
+}
+android.sourceSets.main.java.srcDir(chatcraftGenerated)
+tasks.named('preBuild').configure { dependsOn(generateChatcraftUiIds) }

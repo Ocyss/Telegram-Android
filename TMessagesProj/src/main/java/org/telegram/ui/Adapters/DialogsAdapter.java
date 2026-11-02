@@ -1207,6 +1207,7 @@ public class DialogsAdapter extends RecyclerListView.SelectionAdapter implements
     }
 
     public void moveDialogs(RecyclerListView recyclerView, int fromPosition, int toPosition) {
+        if (parentFragment.isChatcraftMainListFiltered(currentAccount, dialogsType, folderId)) return;
         ArrayList<TLRPC.Dialog> dialogs = parentFragment.getDialogsArray(currentAccount, dialogsType, folderId, false);
         int fromIndex = fixPosition(fromPosition);
         int toIndex = fixPosition(toPosition);

@@ -324,6 +324,8 @@ target_link_libraries(${NATIVE_LIB}
         cpufeatures
         breakpad)
 
+include(chatcraft.cmake)
+
 #if (${ANDROID_ABI} STREQUAL "x86" OR ${ANDROID_ABI} STREQUAL "x86_64")
 #    target_link_libraries(${NATIVE_LIB}
 #            -Wl,--whole-archive vpxasm -Wl,--no-whole-archive
