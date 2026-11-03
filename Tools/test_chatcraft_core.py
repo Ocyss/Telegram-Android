@@ -86,11 +86,26 @@ def check_sources():
         "clearLogs",
         "switchBackend",
         "version",
+        "account",
+        "accounts",
+        "wallet",
+        "features",
+        "roundVideo",
+        "logout",
     }
-    assert len(ids) == len(set(ids)) == 58, ids
+    assert len(set(ids)) == 64, ids
     assert set(ids) == {"android.privacy." + name for name in expected.values()} | {
         "android.settings." + name for name in settings_ids
     }
+    current_settings = (java / "ui/SettingsActivity.java").read_text(encoding="utf-8")
+    assert 'R.drawable.msg_customize, "Chatcraft"' in current_settings
+    assert (
+        "presentSettingFragment(new ChatcraftSettingsActivity());" in current_settings
+    )
+    assert "public void onResume()" in current_settings
+    assert "listView.adapter.update(false);" in current_settings
+    launch = (java / "ui/LaunchActivity.java").read_text(encoding="utf-8")
+    assert "fragment = new SettingsActivity();" in launch
     profile = (java / "ui/ProfileActivity.java").read_text(encoding="utf-8")
     assert "chatcraftRow = rowCount++;" in profile
     assert 'new SearchResult(9001, "Chatcraft"' in profile
@@ -145,7 +160,7 @@ def check_sources():
     assert "dialogId = encryptedChat.user_id;" in core
     assert "filter.includesDialog(instance, dialogId, dialog)" in core
     print(
-        "Source contracts passed: 58 UI gates, settings entry/reset, video ad guards, drag guards, encrypted membership ID"
+        "Source contracts passed: 64 UI IDs, current/legacy settings entry/reset, video ad guards, drag guards, encrypted membership ID"
     )
 
 

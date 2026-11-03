@@ -14,7 +14,8 @@ def generateChatcraftUiIds = tasks.register('generateChatcraftUiIds') {
             def text = source.getText('UTF-8').replaceAll(/(?s)\/\*.*?\*\//, '').replaceAll(/(?m)\/\/[^\r\n]*/, '')
             def matches = text =~ /(?:org\.telegram\.messenger\.)?ChatcraftCore\s*\.\s*visible\s*\(\s*"(android\.[A-Za-z0-9_.-]+)"\s*\)/
             matches.each { match ->
-                if (!ids.add(match[1])) throw new GradleException("Duplicate Chatcraft UI gate: ${match[1]}")
+                // The current and legacy settings pages share semantic IDs.
+                ids.add(match[1])
             }
         }
         if (ids.isEmpty()) throw new GradleException('No integrated Chatcraft native UI gates found')

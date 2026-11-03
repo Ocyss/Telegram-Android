@@ -615,6 +615,22 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
         }
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (avatarContainer != null) {
+            final boolean showAvatarAction = org.telegram.messenger.ChatcraftCore.visible("android.settings.setAvatar");
+            avatarContainer.setEnabled(showAvatarAction);
+            cameraButton.setVisibility(showAvatarAction ? View.VISIBLE : View.GONE);
+        }
+        if (otherItem != null) {
+            otherItem.setVisibility(org.telegram.messenger.ChatcraftCore.visible("android.settings.logout") ? View.VISIBLE : View.GONE);
+        }
+        if (listView != null) {
+            listView.adapter.update(false);
+        }
+    }
+
     private ArrayList<Integer> accountNumbers = new ArrayList<>();
     private void fillItems(ArrayList<UItem> items, UniversalAdapter adapter) {
         if (searchItem.isSearchFieldVisible2()) {
@@ -643,7 +659,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
         });
 
         final Set<String> suggestions = getMessagesController().pendingSuggestions;
-        if (suggestions.contains("PREMIUM_GRACE")) {
+        if (suggestions.contains("PREMIUM_GRACE") && org.telegram.messenger.ChatcraftCore.visible("android.settings.graceSuggestion")) {
             items.add(SuggestionCell.Factory.of(
                 getString(R.string.GraceSuggestionTitle),
                 getString(R.string.GraceSuggestionMessage),
@@ -654,7 +670,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
                 }
             ));
             items.add(UItem.asShadow(null));
-        } else if (suggestions.contains("VALIDATE_PHONE_NUMBER") && getUserConfig().getCurrentUser() != null) {
+        } else if (suggestions.contains("VALIDATE_PHONE_NUMBER") && getUserConfig().getCurrentUser() != null && org.telegram.messenger.ChatcraftCore.visible("android.settings.phoneSuggestion")) {
             items.add(SuggestionCell.Factory.of(
                 formatString(R.string.CheckPhoneNumber, PhoneFormat.getInstance().format("+" + getUserConfig().getCurrentUser().phone)),
                 replaceSingleTag(getString(R.string.CheckPhoneNumberInfo), () -> {
@@ -668,7 +684,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
                 }
             ));
             items.add(UItem.asShadow(null));
-        } else if (suggestions.contains("VALIDATE_PASSWORD")) {
+        } else if (suggestions.contains("VALIDATE_PASSWORD") && org.telegram.messenger.ChatcraftCore.visible("android.settings.passwordSuggestion")) {
             items.add(SuggestionCell.Factory.of(
                 getString(R.string.YourPasswordHeader),
                 getString(R.string.YourPasswordRemember),
@@ -682,7 +698,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
             items.add(UItem.asShadow(null));
         }
 
-        if (accountNumbers.size() > 0) {
+        if (accountNumbers.size() > 0 && org.telegram.messenger.ChatcraftCore.visible("android.settings.accounts")) {
             items.add(UItem.asHeader(getString(R.string.SettingsAccounts)));
             for (int i = 0; i < accountNumbers.size(); ++i) {
                 items.add(AccountCell.Factory.of(i, accountNumbers.get(i)));
@@ -691,74 +707,108 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
         }
 
         final boolean walletAbove = getConnectionsManager().getCurrentTime() - 1791538462 < 4 * 7 * 24 * 60 * 60;
-        if (walletAbove && getMessagesController().config.walletAvailable.get()) {
+        final boolean walletVisible = org.telegram.messenger.ChatcraftCore.visible("android.settings.wallet");
+        if (walletAbove && walletVisible && getMessagesController().config.walletAvailable.get()) {
             final GramWallet wallet = GramWallet.getInstance(currentAccount);
             items.add(SettingCell.Factory.of(25, 0, 0, Theme.isCurrentThemeDark() ? R.drawable.settings_wallet_dark : R.drawable.settings_wallet, TextCell.applyNewSpanTimed(getString(R.string.WalletAttachMoney), 1790679020), null, wallet.getBalance() > 0 ? GramWallet.formatGrams(wallet.getBalance()) : null));
             items.add(UItem.asShadow(null));
         }
 
+        items.add(SettingCell.Factory.of(26, IconBackgroundColors.PURPLE.top, IconBackgroundColors.PURPLE.bottom, R.drawable.msg_customize, "Chatcraft"));
+        if (org.telegram.messenger.ChatcraftCore.visible("android.settings.account"))
         items.add(SettingCell.Factory.of(1, IconBackgroundColors.BLUE.top, IconBackgroundColors.BLUE.bottom, R.drawable.settings_account, getString(R.string.SettingsAccount), getString(R.string.SettingsAccountInfo)));
+        if (org.telegram.messenger.ChatcraftCore.visible("android.settings.chat"))
         items.add(SettingCell.Factory.of(2, IconBackgroundColors.ORANGE.top, IconBackgroundColors.ORANGE.bottom, R.drawable.settings_chat, getString(R.string.SettingsChat), getString(R.string.SettingsChatInfo)));
+        if (org.telegram.messenger.ChatcraftCore.visible("android.settings.privacy"))
         items.add(SettingCell.Factory.of(3, IconBackgroundColors.GREEN.top, IconBackgroundColors.GREEN.bottom, R.drawable.settings_privacy, getString(R.string.SettingsPrivacySecurity), getString(R.string.SettingsPrivacySecurityInfo)));
+        if (org.telegram.messenger.ChatcraftCore.visible("android.settings.notifications"))
         items.add(SettingCell.Factory.of(5, IconBackgroundColors.RED.top, IconBackgroundColors.RED.bottom, R.drawable.settings_sounds, getString(R.string.SettingsNotifications), getString(R.string.SettingsNotificationsInfo)));
+        if (org.telegram.messenger.ChatcraftCore.visible("android.settings.data"))
         items.add(SettingCell.Factory.of(6, IconBackgroundColors.BLUE_DEEP.top, IconBackgroundColors.BLUE_DEEP.bottom, R.drawable.settings_data, getString(R.string.SettingsData), getString(R.string.SettingsDataInfo)));
+        if (org.telegram.messenger.ChatcraftCore.visible("android.settings.filters"))
         items.add(SettingCell.Factory.of(7, IconBackgroundColors.BLUE_ALT.top, IconBackgroundColors.BLUE_ALT.bottom, R.drawable.settings_folders, getString(R.string.SettingsFolders), getString(R.string.SettingsFoldersInfo)));
+        if (org.telegram.messenger.ChatcraftCore.visible("android.settings.devices"))
         items.add(SettingCell.Factory.of(8, IconBackgroundColors.CYAN.top, IconBackgroundColors.CYAN.bottom, R.drawable.settings_devices, getString(R.string.SettingsDevices), getString(R.string.SettingsDevicesInfo)));
+        if (org.telegram.messenger.ChatcraftCore.visible("android.settings.liteMode"))
         items.add(SettingCell.Factory.of(9, IconBackgroundColors.ORANGE_DEEP.top, IconBackgroundColors.ORANGE_DEEP.bottom, R.drawable.settings_power, getString(R.string.SettingsPowerSaving), getString(R.string.SettingsPowerSavingInfo)));
+        if (org.telegram.messenger.ChatcraftCore.visible("android.settings.language"))
         items.add(SettingCell.Factory.of(10, IconBackgroundColors.PURPLE.top, IconBackgroundColors.PURPLE.bottom, R.drawable.settings_language, getString(R.string.SettingsLanguage), LocaleController.getCurrentLanguageName()));
 
         items.add(UItem.asShadow(null));
-        if (!walletAbove && getMessagesController().config.walletAvailable.get()) {
+        if (!walletAbove && walletVisible && getMessagesController().config.walletAvailable.get()) {
             final GramWallet wallet = GramWallet.getInstance(currentAccount);
             items.add(SettingCell.Factory.of(25, 0, 0, Theme.isCurrentThemeDark() ? R.drawable.settings_wallet_dark : R.drawable.settings_wallet, TextCell.applyNewSpanTimed(getString(R.string.WalletAttachMoney), 1790679020), null, wallet.getBalance() > 0 ? GramWallet.formatGrams(wallet.getBalance()) : null));
             items.add(UItem.asShadow(null));
         }
 
         if (!getMessagesController().premiumFeaturesBlocked()) {
+            if (org.telegram.messenger.ChatcraftCore.visible("android.settings.premium"))
             items.add(SettingCell.Factory.of(11, 0xFFB659FF, 0xFF617CFF, R.drawable.settings_premium, getString(R.string.TelegramPremium)));
         }
         if (getMessagesController().starsPurchaseAvailable()) {
             StarsController c = StarsController.getInstance(currentAccount);
             long balance = c.getBalance().amount;
+            if (org.telegram.messenger.ChatcraftCore.visible("android.settings.stars"))
             items.add(SettingCell.Factory.of(12, 0xFFEFA612, 0xFFE77512, R.drawable.settings_stars, getString(R.string.TelegramStars), null, c.balanceAvailable() && balance > 0 ? StarsIntroActivity.formatStarsAmount(c.getBalance(), 0.85f, ' ') : ""));
         }
         StarsController.getInstance(currentAccount, true).getBalance();
         if (ApplicationLoader.isBetaBuild() || ApplicationLoader.isStandaloneBuild() || ApplicationLoader.isHuaweiStoreBuild() || (StarsController.getInstance(currentAccount, true).balanceAvailable() && (StarsController.getInstance(currentAccount, true).hasTransactions() || StarsController.getInstance(currentAccount, true).getBalance().positive()))) {
             final StarsController c = StarsController.getTonInstance(currentAccount);
             final long balance = c.getBalance().amount;
+            if (org.telegram.messenger.ChatcraftCore.visible("android.settings.ton"))
             items.add(SettingCell.Factory.of(13, 0xFF1BA4ED, 0xFF1488E1, R.drawable.filled_gram_earnings, getString(R.string.GramEarnings), null, c.balanceAvailable() && balance > 0 ? StarsIntroActivity.formatStarsAmount(c.getBalance(), 0.85f, ' ') : ""));
         }
 
         if (!getMessagesController().premiumFeaturesBlocked()) {
+            if (org.telegram.messenger.ChatcraftCore.visible("android.settings.business"))
             items.add(SettingCell.Factory.of(15, 0xFFF45255, 0xFFDF3955, R.drawable.settings_business, getString(R.string.TelegramBusiness)));
         }
         if (!getMessagesController().premiumPurchaseBlocked()) {
+            if (org.telegram.messenger.ChatcraftCore.visible("android.settings.premiumGifting"))
             items.add(SettingCell.Factory.of(16, 0xFFF38B31, 0xFFE26314, R.drawable.settings_gift, getString(R.string.SendAGift)));
         }
         if (items.get(items.size() - 1).viewType != UniversalAdapter.VIEW_TYPE_SHADOW)
             items.add(UItem.asShadow(null));
 
         items.add(UItem.asHeader(getString(R.string.SettingsHelp)));
+        if (org.telegram.messenger.ChatcraftCore.visible("android.settings.question"))
         items.add(SettingCell.Factory.of(17, IconBackgroundColors.ORANGE.top, IconBackgroundColors.ORANGE.bottom, R.drawable.settings_ask, getString(R.string.AskAQuestion)));
+        if (org.telegram.messenger.ChatcraftCore.visible("android.settings.faq"))
         items.add(SettingCell.Factory.of(18, IconBackgroundColors.BLUE_LIGHT.top, IconBackgroundColors.BLUE_LIGHT.bottom, R.drawable.settings_faq, getString(R.string.TelegramFAQ)));
+        if (org.telegram.messenger.ChatcraftCore.visible("android.settings.features"))
         items.add(SettingCell.Factory.of(23, IconBackgroundColors.PURPLE.top, IconBackgroundColors.PURPLE.bottom, R.drawable.settings_features, getString(R.string.TelegramFeatures)));
+        if (org.telegram.messenger.ChatcraftCore.visible("android.settings.policy"))
         items.add(SettingCell.Factory.of(19, IconBackgroundColors.GREEN.top, IconBackgroundColors.GREEN.bottom, R.drawable.settings_policy, getString(R.string.PrivacyPolicy)));
 
         if (SharedSettings.experimentalSettingsAllowed.get()) {
             items.add(UItem.asShadow(null));
             items.add(UItem.asHeader("Experimental"));
+            if (org.telegram.messenger.ChatcraftCore.visible("android.settings.roundVideo"))
             items.add(SettingCell.Factory.of(24, 0xFFF45255, 0xFFDF3955, 0, getString(R.string.RoundVideoSettings)));
         }
 
         if (BuildVars.LOGS_ENABLED || BuildVars.DEBUG_PRIVATE_VERSION) {
             items.add(UItem.asShadow(null));
             items.add(UItem.asHeader(getString(R.string.SettingsDebug)));
+            if (org.telegram.messenger.ChatcraftCore.visible("android.settings.sendLogs"))
             items.add(SettingCell.Factory.of(20, 0xFF55CA47, 0xFF27B434, 0, getString(R.string.DebugSendLogs)));
+            if (org.telegram.messenger.ChatcraftCore.visible("android.settings.sendLastLogs"))
             items.add(SettingCell.Factory.of(21, 0xFF55CA47, 0xFF27B434, 0, getString(R.string.DebugSendLastLogs)));
+            if (org.telegram.messenger.ChatcraftCore.visible("android.settings.clearLogs"))
             items.add(SettingCell.Factory.of(22, 0xFFF45255, 0xFFDF3955, 0, getString(R.string.DebugClearLogs)));
         }
 
-        items.add(UItem.asCustomShadow(versionView));
+        for (int i = items.size() - 1; i >= 1; --i) {
+            final int type = items.get(i).viewType;
+            if (type == UniversalAdapter.VIEW_TYPE_HEADER && (i == items.size() - 1 || items.get(i + 1).viewType == UniversalAdapter.VIEW_TYPE_SHADOW || items.get(i + 1).viewType == UniversalAdapter.VIEW_TYPE_HEADER)) {
+                items.remove(i);
+            } else if (type == UniversalAdapter.VIEW_TYPE_SHADOW && (i == items.size() - 1 || items.get(i - 1).viewType == UniversalAdapter.VIEW_TYPE_SHADOW)) {
+                items.remove(i);
+            }
+        }
+        if (org.telegram.messenger.ChatcraftCore.visible("android.settings.version")) {
+            items.add(UItem.asCustomShadow(versionView));
+        }
     }
 
     private void presentSettingFragment(BaseFragment fragment) {
@@ -817,6 +867,9 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
             return;
         }
         switch (item.id) {
+            case 26:
+                presentSettingFragment(new ChatcraftSettingsActivity());
+                break;
             case 1:
                 presentSettingFragment(new UserInfoActivity());
                 break;
